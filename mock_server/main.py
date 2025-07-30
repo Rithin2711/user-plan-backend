@@ -1,262 +1,185 @@
-from fastapi import FastAPI, HTTPException, Depends, Header, status
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Query, Body
 from fastapi.openapi.utils import get_openapi
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Optional, Dict
+from typing import Optional, Literal
 
-# --- In-memory user and plan setup ---
+# --- In-memory hardcoded users and plans (per requirements) ---
 
-# PUBLIC_INTERFACE
-class User(BaseModel):
-    """User model with username and plan."""
-    username: str = Field(..., description="The unique username")
-    plan: str = Field(..., description="The subscription plan (basic, pro, enterprise)")
-
-# Demo users: username -> plan
-USER_PLAN_MAP: Dict[str, str] = {
-    "alice": "basic",
-    "bob": "pro",
-    "charlie": "enterprise",
+# Maps each username to their plan name.
+USER_PLANS = {
+    "alice": "normal",
+    "bob": "premium",
+    "carol": "ultra"
 }
-
-# In-memory current user (simulates a session; for demo/development only)
-current_user: Optional[User] = None
 
 # --- FastAPI app setup ---
 
 app = FastAPI(
     title="Mock User Plan Server",
     description=(
-        "A backend mock server that demonstrates username-based login and "
-        "plan-based feature variation for demo purposes. No authentication required."
+        "Mock backend server: demonstrates endpoints whose output varies entirely based on the username. "
+        "The same endpoint will reply with distinct data for 'alice' (normal plan), 'bob' (premium), and 'carol' (ultra). "
+        "No authentication. Send username as a query param or JSON body field. "
+        "Great for frontend and plan-tier demo."
     ),
     version="1.0.0",
     openapi_tags=[
-        {"name": "Authentication", "description": "Login and user management"},
-        {"name": "Demo Endpoints", "description": "Plan-based API demo endpoints"},
+        {"name": "UserPlanDemo", "description": "Plan-based API endpoints for demo. Behavior is user/plan-specific."},
     ],
 )
 
-# Allow CORS for demo/testing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Allow all origins for demo
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- Helper dependencies and responses ---
-
-def get_current_user(x_username: Optional[str] = Header(default=None, alias="X-Username")) -> User:
-    """
-    Extracts current user based on X-Username header.
-    Raises HTTPException if user is not recognized or not logged in.
-
-    Args:
-        x_username: Optional[str] - X-Username header (case-insensitive)
-
-    Returns:
-        User: The active User object from in-memory map
-    """
-    # Use header if provided, fall back to in-memory current_user
-    if x_username:
-        plan = USER_PLAN_MAP.get(x_username.lower())
-        if not plan:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Username not recognized. Please login first."
-            )
-        return User(username=x_username.lower(), plan=plan)
-    if current_user:
-        return current_user
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="No user logged in. Use /login to select a user."
-    )
-
-# --- Public API models ---
+# --- Pydantic models for API I/O ---
 
 # PUBLIC_INTERFACE
-class LoginRequest(BaseModel):
-    """Request model for login endpoint."""
-    username: str = Field(..., description="Username to login as")
+class UserDataRequest(BaseModel):
+    """Request body: provide username for data request."""
+    username: str = Field(..., description="The username (alice, bob, or carol)")
 
 # PUBLIC_INTERFACE
-class LoginResponse(BaseModel):
-    """Login response with assigned plan."""
-    username: str = Field(..., description="Logged-in username")
-    plan: str = Field(..., description="Assigned plan")
-
-# --- Authentication Endpoints ---
-
-# PUBLIC_INTERFACE
-@app.post("/login", response_model=LoginResponse, tags=["Authentication"], summary="Login as a user")
-async def login(request: LoginRequest):
-    """
-    Log in as one of the demo users by username (no password required).
-    Sets the active user for your session.
-
-    Args:
-        request (LoginRequest): JSON body with 'username' field.
-
-    Returns:
-        LoginResponse: Username and assigned plan.
-    """
-    global current_user
-    username = request.username.lower()
-    plan = USER_PLAN_MAP.get(username)
-    if not plan:
-        raise HTTPException(status_code=401, detail="User not found. Available users: " + ", ".join(USER_PLAN_MAP.keys()))
-    current_user = User(username=username, plan=plan)
-    return LoginResponse(username=username, plan=plan)
-
-# PUBLIC_INTERFACE
-@app.post("/switch_user", response_model=LoginResponse, tags=["Authentication"], summary="Switch to a different user")
-async def switch_user(request: LoginRequest):
-    """
-    Switch to another demo user using their username.
-
-    Args:
-        request (LoginRequest): JSON body with new username.
-
-    Returns:
-        LoginResponse: Username and assigned plan.
-    """
-    global current_user
-    username = request.username.lower()
-    plan = USER_PLAN_MAP.get(username)
-    if not plan:
-        raise HTTPException(status_code=401, detail="User not found. Available users: " + ", ".join(USER_PLAN_MAP.keys()))
-    current_user = User(username=username, plan=plan)
-    return LoginResponse(username=username, plan=plan)
-
-# PUBLIC_INTERFACE
-@app.get("/current_user", response_model=LoginResponse, tags=["Authentication"], summary="Get current logged-in user")
-async def get_logged_in_user(user: User = Depends(get_current_user)):
-    """
-    Get info about the currently active/logged-in user.
-
-    Returns:
-        LoginResponse: Username and assigned plan.
-    """
-    return LoginResponse(username=user.username, plan=user.plan)
-
-# PUBLIC_INTERFACE
-@app.post("/logout", tags=["Authentication"], summary="Log out current user")
-async def logout():
-    """
-    Log out the current user (clears session).
-    """
-    global current_user
-    current_user = None
-    return {"msg": "Logged out. No user active."}
-
-# --- Demo Endpoints (plan-based responses) ---
+class FeatureRequest(BaseModel):
+    """Request body: provide username for feature info request."""
+    username: str = Field(..., description="The username (alice, bob, or carol)")
 
 # PUBLIC_INTERFACE
 class UserDataResponse(BaseModel):
-    """Data summary, varies based on plan."""
-    username: str = Field(..., description="The current user")
-    plan: str = Field(..., description="User's plan")
-    data: str = Field(..., description="Plan-specific data/response")
+    """Response for /user/data: always includes username, plan level, and a distinct data description."""
+    username: str = Field(..., description="The username for whom data is retrieved")
+    plan: Literal['normal', 'premium', 'ultra'] = Field(..., description="Plan level: normal, premium, or ultra")
+    data: str = Field(..., description="Distinct, plan-specific user data/description.")
 
 # PUBLIC_INTERFACE
-@app.get("/user/data", response_model=UserDataResponse, tags=["Demo Endpoints"], summary="Get user data for plan")
-async def get_user_data(user: User = Depends(get_current_user)):
-    """
-    Get demo data for the user; output changes based on assigned plan.
+class UserFeatureResponse(BaseModel):
+    """Response for /user/feature: always includes username, plan, and plan-specific feature info."""
+    username: str = Field(..., description="The username requesting feature info")
+    plan: Literal['normal', 'premium', 'ultra'] = Field(..., description="User's plan")
+    features: str = Field(..., description="Textual summary of features unique to this plan.")
 
-    Returns:
-        UserDataResponse: Data and details unique to the user's plan.
+# --- Helper: Plan lookup and error management ---
+
+def get_plan_for_username(username: str) -> str:
     """
-    base = f"Hello {user.username}! You are on the {user.plan} plan."
-    if user.plan == "basic":
-        data = f"{base} You receive 5 data points and community support."
-    elif user.plan == "pro":
-        data = f"{base} You receive 20 data points, email support, and quarterly analytics."
-    elif user.plan == "enterprise":
-        data = f"{base} You receive UNLIMITED data points, 24/7 premium support, and dedicated account management."
+    Utility: return plan for a username or raise a ValueError if unknown.
+    """
+    key = username.strip().lower()
+    plan = USER_PLANS.get(key)
+    if not plan:
+        raise ValueError(
+            f"Username not recognized: '{username}'. Must be one of: {', '.join(USER_PLANS.keys())}"
+        )
+    return plan
+
+# --- Endpoints ---
+
+# PUBLIC_INTERFACE
+@app.get("/user/data", response_model=UserDataResponse, tags=["UserPlanDemo"], summary="Get user data (plan-specific, by username)")
+async def get_user_data(username: Optional[str] = Query(None, description="The username (alice, bob, or carol)")):
+    """
+    Returns plan-specific data summary for the given username.
+
+    The 'plan' in the response reflects the user's assigned plan.
+    Response content is *meaningfully* different for each plan (normal, premium, ultra).
+    No authentication needed.
+    """
+    if not username:
+        return {
+            "username": "",
+            "plan": "",
+            "data": "You must provide a username as query parameter (?username=alice, bob, or carol)."
+        }
+    try:
+        plan = get_plan_for_username(username)
+    except ValueError as e:
+        return {"username": username.lower(), "plan": "", "data": str(e)}
+    uname = username.strip().lower()
+    if plan == "normal":
+        data = (
+            "Welcome, alice! You're on the NORMAL plan. "
+            "You can access basic features, view standard data, and use the app with limited support. "
+            "Your daily quota: 10 data items. Upgrade for more!"
+        )
+    elif plan == "premium":
+        data = (
+            "Hello, bob! You're on the PREMIUM plan. "
+            "In addition to everything in 'normal', you get access to premium-only reports, priority support, and a 5x data quota (50 daily items)."
+        )
+    elif plan == "ultra":
+        data = (
+            "Hi, carol! You're on the ULTRA plan. "
+            "Enjoy all features: unlimited data, exclusive beta features, one-on-one onboarding, and 24/7 direct support. The app experience is fully unlocked."
+        )
     else:
-        data = f"{base} [Unknown plan]"
-    return UserDataResponse(username=user.username, plan=user.plan, data=data)
+        data = "Unknown plan."
+    return UserDataResponse(username=uname, plan=plan, data=data)
 
 # PUBLIC_INTERFACE
-class FeatureResponse(BaseModel):
-    """Feature summary, varies based on plan."""
-    username: str = Field(..., description="The current user")
-    plan: str = Field(..., description="User's plan")
-    feature_message: str = Field(..., description="Plan-specific feature description")
+@app.post("/user/data", response_model=UserDataResponse, tags=["UserPlanDemo"], summary="Get user data (plan-specific, via JSON)")
+async def post_user_data(request: UserDataRequest = Body(...)):
+    """
+    Returns plan-specific data for the given username supplied in JSON.
+    """
+    return await get_user_data(username=request.username)
 
 # PUBLIC_INTERFACE
-@app.get("/user/feature", response_model=FeatureResponse, tags=["Demo Endpoints"], summary="Get feature flags/info based on plan")
-async def get_user_feature(user: User = Depends(get_current_user)):
+@app.get("/user/feature", response_model=UserFeatureResponse, tags=["UserPlanDemo"], summary="Get feature info for plan (by username, query param)")
+async def get_user_feature(username: Optional[str] = Query(None, description="The username (alice, bob, or carol)")):
     """
-    Returns unique feature messages based on the user's plan.
-
-    Returns:
-        FeatureResponse: Plan-specific feature variations.
+    Returns descriptive summary of accessible features for the given username's plan.
+    Response content is *clearly distinct* for normal/premium/ultra.
     """
-    if user.plan == "basic":
-        message = "Basic plan: Feature A only. Upgrade for more!"
-    elif user.plan == "pro":
-        message = "Pro plan: Features A, B, and access to advanced reporting."
-    elif user.plan == "enterprise":
-        message = "Enterprise plan: All features (A, B, C), custom integrations, and VIP onboarding."
+    if not username:
+        return {
+            "username": "",
+            "plan": "",
+            "features": "Provide ?username=alice, bob, or carol."
+        }
+    try:
+        plan = get_plan_for_username(username)
+    except ValueError as e:
+        return {"username": username.lower(), "plan": "", "features": str(e)}
+    uname = username.strip().lower()
+    if plan == "normal":
+        features = (
+            "NORMAL plan: Access standard dashboard, community forum, and API rate limited to 10 calls/day. No analytics, no premium reports."
+        )
+    elif plan == "premium":
+        features = (
+            "PREMIUM plan: Includes all 'normal' features, plus premium analytics, early feature previews, increased API rate limit (50/day), email support, and monthly data exports."
+        )
+    elif plan == "ultra":
+        features = (
+            "ULTRA plan: All premium features plus unlimited API usage, direct access to product team, custom integrations, exclusive VIP tools, priority bugfixes, and white-glove onboarding."
+        )
     else:
-        message = "Unknown plan."
-    return FeatureResponse(username=user.username, plan=user.plan, feature_message=message)
+        features = "Unknown plan."
+    return UserFeatureResponse(username=uname, plan=plan, features=features)
 
 # PUBLIC_INTERFACE
-@app.get("/user/dashboard", tags=["Demo Endpoints"], summary="Dashboard data (plan-varied)")
-async def get_user_dashboard(user: User = Depends(get_current_user)):
+@app.post("/user/feature", response_model=UserFeatureResponse, tags=["UserPlanDemo"], summary="Get feature info for plan (by username, JSON)")
+async def post_user_feature(request: FeatureRequest = Body(...)):
     """
-    Demo: Dashboard widgets/data varies based on plan.
-
-    Returns:
-        Dict[str, str]: Dashboard data details per plan.
+    Returns feature info for the username/plan specified as JSON.
     """
-    if user.plan == "basic":
-        resp = {
-            "widgets": "2 widgets: 'Overview', 'Profile'",
-            "tips": "Upgrade to Pro for analytics and reporting!",
-        }
-    elif user.plan == "pro":
-        resp = {
-            "widgets": "5 widgets: 'Overview', 'Profile', 'Analytics', 'Reports', 'Export'",
-            "tips": "Enterprise unlocks customization options.",
-        }
-    elif user.plan == "enterprise":
-        resp = {
-            "widgets": "All widgets enabled, plus custom builder",
-            "tips": "Enjoy priority SLAs and dedicated tools.",
-        }
-    else:
-        resp = {
-            "widgets": "None",
-            "tips": "Unknown plan.",
-        }
-    resp.update({
-        "username": user.username,
-        "plan": user.plan,
-    })
-    return resp
+    return await get_user_feature(username=request.username)
 
-# --- Extra: User directory endpoint for demo/testing ---
+# --- User directory for demo/testing ---
 
-# PUBLIC_INTERFACE
-@app.get("/directory", tags=["Authentication"], summary="Get directory of demo users (for demo/test)")
-async def directory():
+@app.get("/users", tags=["UserPlanDemo"], summary="Get a list of all usernames and their plan (demo)")
+async def list_users():
     """
-    Lists all available demo users and their assigned plans.
-
-    Returns:
-        Dict[str, str]: Mapping of usernames to plans.
+    Returns a mapping of all available usernames to their plan.
     """
-    return USER_PLAN_MAP.copy()
+    return USER_PLANS.copy()
 
-# --- Custom OpenAPI: Add explicit demo notes ---
+# --- OpenAPI customization for demo notes and usage help ---
 
 def custom_openapi():
     if app.openapi_schema:
@@ -264,15 +187,14 @@ def custom_openapi():
     openapi_schema = get_openapi(
         title=app.title,
         version=app.version,
-        description=app.description + (
-            "\n\n---\n\n"
-            "**Demo usage:**\n"
-            "- Log in using /login (username only: alice, bob, charlie)\n"
-            "- Use X-Username request header (or session) for all API calls\n"
-            "- Endpoints like /user/data return responses unique to your plan\n"
-            "- Switch between users with /switch_user\n"
-            "- All data is in-memory and resets when server restarts.\n"
-        ),
+        description=app.description +
+            (
+                "\n\nUsage:\n"
+                "- Provide a username via query (?username=alice, bob, or carol) or as a JSON field {\"username\": ...}.\n"
+                "- /user/data and /user/feature will reply distinctly for each user's plan.\n"
+                "- Users: alice (normal), bob (premium), carol (ultra).\n"
+                "- No login, authentication, or headers required."
+            ),
         routes=app.routes,
     )
     app.openapi_schema = openapi_schema

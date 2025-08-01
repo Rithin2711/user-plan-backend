@@ -1,0 +1,259 @@
+.response-display {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.response-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.response-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.3rem;
+}
+
+.response-count {
+  color: #666;
+  font-size: 0.9rem;
+  background-color: #f0f0f0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+}
+
+.no-responses {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.empty-state {
+  text-align: center;
+  color: #666;
+  max-width: 400px;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state h4 {
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.empty-state p {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.response-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+}
+
+.response-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background: white;
+  overflow: hidden;
+}
+
+.response-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+}
+
+.response-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.method-tag, .endpoint-tag, .user-tag, .timestamp-tag {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.method-tag {
+  color: white;
+  min-width: 50px;
+  text-align: center;
+}
+
+.method-get {
+  background-color: #4caf50;
+}
+
+.method-post {
+  background-color: #ff9800;
+}
+
+.endpoint-tag {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-family: monospace;
+}
+
+.user-tag {
+  font-weight: 600;
+}
+
+.timestamp-tag {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+.expand-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: #666;
+  transition: transform 0.2s ease;
+}
+
+.expand-button:hover {
+  color: #333;
+}
+
+.response-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.response-content.expanded {
+  max-height: 1000px;
+  padding: 1rem;
+}
+
+.plan-indicator {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: bold;
+  color: white;
+}
+
+.plan-indicator.plan-normal {
+  background-color: #2196f3;
+}
+
+.plan-indicator.plan-premium {
+  background-color: #ff9800;
+}
+
+.plan-indicator.plan-ultra {
+  background-color: #9c27b0;
+}
+
+.response-body {
+  margin-bottom: 1rem;
+}
+
+.json-response {
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.plan-specific-content {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1rem;
+}
+
+.plan-specific-content h5 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+.content-text {
+  background-color: #f0f8f0;
+  border: 1px solid #c8e6c9;
+  border-radius: 6px;
+  padding: 0.75rem;
+  color: #2e7d32;
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.plan-legend {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
+}
+
+.plan-legend h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.legend-items {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Scrollbar styling */
+.response-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.response-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.response-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.response-list::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}

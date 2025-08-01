@@ -1,0 +1,127 @@
+.user-selector {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.user-selector h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.3rem;
+}
+
+.loading, .no-users {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-style: italic;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.user-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.user-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.user-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.user-button.active {
+  border-color: #4caf50;
+  background-color: #f8fff8;
+}
+
+.user-button.plan-normal {
+  border-left: 4px solid #2196f3;
+}
+
+.user-button.plan-normal:hover:not(:disabled) {
+  border-left-color: #1976d2;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.user-button.plan-premium {
+  border-left: 4px solid #ff9800;
+}
+
+.user-button.plan-premium:hover:not(:disabled) {
+  border-left-color: #f57c00;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
+}
+
+.user-button.plan-ultra {
+  border-left: 4px solid #9c27b0;
+}
+
+.user-button.plan-ultra:hover:not(:disabled) {
+  border-left-color: #7b1fa2;
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.2);
+}
+
+.user-info .username {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.plan-badge {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.plan-normal .plan-badge {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.plan-premium .plan-badge {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.plan-ultra .plan-badge {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.current-indicator {
+  color: #4caf50;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.current-user {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #f0f8f0;
+  border-radius: 6px;
+  border: 1px solid #c8e6c9;
+  color: #2e7d32;
+  font-size: 0.9rem;
+}

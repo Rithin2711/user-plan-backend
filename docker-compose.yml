@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  mock_server:
+    build:
+      context: ./mock_server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3001
+      - RELOAD=true
+      - LOG_LEVEL=info
+    volumes:
+      - ./mock_server:/app
+      - /app/__pycache__
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/users"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: mock_server_network

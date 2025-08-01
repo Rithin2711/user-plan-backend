@@ -1,0 +1,45 @@
+# Deployment configuration for different environments
+# This file can be used with deployment tools or CI/CD pipelines
+
+environments:
+  development:
+    host: "0.0.0.0"
+    port: 3001
+    reload: true
+    log_level: "debug"
+    cors_origins: "*"
+    
+  staging:
+    host: "0.0.0.0"
+    port: 3001
+    reload: false
+    log_level: "info"
+    cors_origins: "https://staging.example.com,http://localhost:3000"
+    
+  production:
+    host: "0.0.0.0"
+    port: 3001
+    reload: false
+    log_level: "warning"
+    cors_origins: "https://example.com"
+    workers: 4
+
+# Docker settings
+docker:
+  image_name: "mock-server"
+  tag: "latest"
+  ports:
+    - "3001:3001"
+  health_check:
+    endpoint: "/users"
+    interval: "30s"
+    timeout: "10s"
+    retries: 3
+
+# Monitoring
+monitoring:
+  health_check_endpoint: "/users"
+  metrics_enabled: false
+  logging:
+    format: "json"
+    level: "info"
